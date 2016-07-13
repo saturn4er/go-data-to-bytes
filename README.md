@@ -1,5 +1,6 @@
 #go-convert-to-bytes
-This library will help you to convert your data to bytes array and your bytes array to data.
+This library will help you to convert your data to bytes array and vice versa using some features.
+It will be helpful if you use some API which accept/send structs with strict fields length
 
 ## Installation
 
@@ -51,3 +52,6 @@ This library will help you to convert your data to bytes array and your bytes ar
     			   115 101 99 111 110 100 116 101 115 116] - secondtest
     			*/
     }
+
+## TODO: 
+ - Custom encode/decode functions 

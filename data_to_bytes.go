@@ -30,40 +30,12 @@ func convertValueToBytes(value reflect.Value, Type reflect.Type, endian binary.B
 			binary.Write(&result, endian, val)
 		}
 	case reflect.Struct:
-		fieldsCount := Type.NumField()
-		for i := 0; i < fieldsCount; i++ {
-			fieldType := Type.Field(i)
-			fieldValue := value.Field(i)
-			ignoreField := fieldType.Tag.Get("bytes_ignore")
-			if ignoreField != "" {
-				needIgnoreField, err := strconv.ParseBool(ignoreField)
-				if err == nil && needIgnoreField {
-					continue
-				}
-			}
-			var fieldByteValue interface{}
-			if fieldValue.CanInterface() {
-				if fieldType.Type.Kind() == reflect.String {
-					strValue := fieldValue.String()
-					strLength := fieldType.Tag.Get("bytes_length")
-					length, err := strconv.ParseInt(strLength, 10, 32)
-					if err != nil {
-						return nil, fmt.Errorf("You should specify valid `bytes_length` tag for %s field of type string", fieldType.Name)
-					}
-					val := make([]byte, length)
-					copy(val, strValue)
-					fieldByteValue = val
-				} else {
-					fieldByteValue, err = convertValueToBytes(fieldValue, fieldType.Type, endian)
-					if err != nil {
-						return nil, err
-					}
-				}
-			} else {
-				fieldByteValue = make([]byte, typeSize(fieldType.Type))
-			}
-			binary.Write(&result, endian, fieldByteValue)
+		structBytes, err := convertStructToBytes(value, endian)
+		if err != nil {
+			return nil, err
 		}
+
+		binary.Write(&result, endian, structBytes)
 	case reflect.String, reflect.Slice:
 		return nil, fmt.Errorf("Unsupported type `%s` to convert to bytes\n", Type.Kind().String())
 	default:
@@ -76,3 +48,47 @@ func convertValueToBytes(value reflect.Value, Type reflect.Type, endian binary.B
 	return result.Bytes(), nil
 }
 
+func convertStructToBytes(value reflect.Value, endian binary.ByteOrder) ([]byte, error) {
+	var err error
+	sType := value.Type()
+	fieldsCount := sType.NumField()
+	result := bytes.Buffer{}
+	for i := 0; i < fieldsCount; i++ {
+		fieldValue := value.Field(i)
+		fieldType := sType.Field(i)
+		// Check if we should ignore field
+		sIgnoreField := fieldType.Tag.Get("bytes_ignore")
+		if sIgnoreField != "" {
+			var ignoreField bool
+			ignoreField, err = strconv.ParseBool(sIgnoreField)
+			if err == nil && ignoreField {
+				continue
+			}
+		}
+		var fieldByteValue interface{}
+		if fieldValue.CanInterface() {
+			if fieldType.Type.Kind() == reflect.String {
+				strValue := fieldValue.String()
+				strLength := fieldType.Tag.Get("bytes_length")
+				var length int64
+				length, err = strconv.ParseInt(strLength, 10, 32)
+				if err != nil {
+					return nil, fmt.Errorf("You should specify valid `bytes_length` tag for %s field of type string", fieldType.Name)
+				}
+				val := make([]byte, length)
+				copy(val, strValue)
+				fieldByteValue = val
+			} else {
+				fieldByteValue, err = convertValueToBytes(fieldValue, fieldType.Type, endian)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			fieldByteValue = make([]byte, typeSize(fieldType.Type))
+		}
+
+		binary.Write(&result, endian, fieldByteValue)
+	}
+	return result.Bytes(), nil
+}
