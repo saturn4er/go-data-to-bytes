@@ -1,4 +1,4 @@
-package structsToBytes
+package dtb
 
 import (
 	"encoding/binary"
