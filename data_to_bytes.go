@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 )
@@ -49,7 +48,7 @@ func convertValueToBytes(value reflect.Value, Type reflect.Type, endian binary.B
 					strLength := fieldType.Tag.Get("bytes_length")
 					length, err := strconv.ParseInt(strLength, 10, 32)
 					if err != nil {
-						log.Panicf("You should specify strings length (tag `bytes_length`) for field `%s`\n", fieldType.Name)
+						return nil, fmt.Errorf("You should specify valid `bytes_length` tag for %s field of type string", fieldType.Name)
 					}
 					val := make([]byte, length)
 					copy(val, strValue)
@@ -63,11 +62,10 @@ func convertValueToBytes(value reflect.Value, Type reflect.Type, endian binary.B
 			} else {
 				fieldByteValue = make([]byte, typeSize(fieldType.Type))
 			}
-			//fmt.Printf("%x - %s\n", result.Len(), field_type.Name)
 			binary.Write(&result, endian, fieldByteValue)
 		}
 	case reflect.String, reflect.Slice:
-		log.Panicf("Unsupported type `%s` to convert to bytes\n", Type.Kind().String())
+		return nil, fmt.Errorf("Unsupported type `%s` to convert to bytes\n", Type.Kind().String())
 	default:
 		if value.CanInterface() {
 			binary.Write(&result, endian, value.Interface())

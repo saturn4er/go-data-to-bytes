@@ -66,11 +66,11 @@ func updateValueByTypeFromBytes(value reflect.Value, Type reflect.Type, bytes []
 		for i := 0; i < fieldsCount; i++ {
 			fieldType := Type.Field(i)
 			fieldValue := value.Field(i)
-			ignoreField := fieldType.Tag.Get("bytes_ignore")
 			if !fieldValue.CanInterface() {
 				offset += typeSize(fieldType.Type)
 				continue
 			}
+			ignoreField := fieldType.Tag.Get("bytes_ignore")
 			if ignoreField != "" {
 				needIgnoreField, err := strconv.ParseBool(ignoreField)
 				if err == nil && needIgnoreField {
