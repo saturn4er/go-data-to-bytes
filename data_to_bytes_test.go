@@ -15,7 +15,16 @@ type TestStruct2 struct {
 	Abcde string `bytes_length:"10"`
 	B     byte
 }
+type CustomFnStruct struct {
+	Ip string `bytes_fn:"EncodeIP,DecodeIP"`
+}
 
+func (t CustomFnStruct) EncodeIP() ([]byte, error) {
+	return []byte{192, 168, 0, 1}, nil
+}
+func (t CustomFnStruct) DecodeIP() {
+
+}
 func TestIgnore(t *testing.T) {
 	data := TestStruct1{}
 	newData := TestStruct1{}
@@ -71,4 +80,16 @@ func TestCopyData(t *testing.T) {
 	if !reflect.DeepEqual(data, newData) {
 		t.Error("New struct doesn't equal original one")
 	}
+}
+func TestCustomFunction(t *testing.T) {
+	data := CustomFnStruct{Ip:"192.168.0.1"}
+	b, err := ConvertDataToBytes(&data, binary.LittleEndian)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if !reflect.DeepEqual(b, []byte{192, 168, 0, 1}) {
+		t.Error("Bad custom function parsing")
+	}
+
 }

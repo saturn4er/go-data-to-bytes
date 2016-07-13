@@ -29,8 +29,9 @@ It will be helpful if you use some API which accept/send structs with strict fie
     
 #### Available tags
     
- - bytes_length:"N"         - length of string in bytes
- - bytes_ignore:"true"      - ignore this field during conversion
+ - bytes_length:"N"                    - length of string in bytes
+ - bytes_ignore:"true"              - ignore this field during conversion
+ - bytes_fn:"encode_fn,decode_fn"   - custom functions to encode/decode data
  
 ### Array to bytes
 
