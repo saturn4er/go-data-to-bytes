@@ -2,12 +2,14 @@ package dtb
 
 import (
 	"encoding/binary"
-	"reflect"
 	"errors"
-	"math"
-	"strconv"
 	"fmt"
+	"math"
+	"reflect"
+	"strconv"
+	"strings"
 )
+
 // ConvertBytesToData write byte array to data
 func ConvertBytesToData(bytes []byte, endian binary.ByteOrder, data interface{}) error {
 	dataType := reflect.TypeOf(data)
@@ -77,6 +79,27 @@ func updateValueByTypeFromBytes(value reflect.Value, Type reflect.Type, bytes []
 					continue
 				}
 			}
+			sFuncs := fieldType.Tag.Get("bytes_fn")
+			if sFuncs != "" {
+				funcs := strings.Split(sFuncs, ",")
+				if len(funcs) < 2 {
+					return 0, fmt.Errorf("You should specify two function names separated by comma in `bytes_fn` in field %s", fieldType.Name)
+				}
+				ptrValue := value.Addr()
+				ptrType := ptrValue.Type()
+				methodName := funcs[1]
+				methodType, ok := ptrType.MethodByName(methodName)
+				if !ok {
+					return 0, fmt.Errorf("Structure %s doesn't have method `%s` to encode `%s` to bytes (Check, maybe this method doesn't have pointer receiver)", ptrType.Name(), methodName, fieldType.Name)
+				}
+
+				o, err := decodeValueViaFunc(Type.Name(), fieldValue, ptrValue.MethodByName(methodName), methodType, bytes[offset:])
+				if err != nil {
+					return 0, err
+				}
+				offset += o
+				continue
+			}
 			if fieldType.Type.Kind() == reflect.String {
 				strLength := fieldType.Tag.Get("bytes_length")
 				length, err := strconv.ParseInt(strLength, 10, 32)
@@ -117,4 +140,34 @@ func updateValueByTypeFromBytes(value reflect.Value, Type reflect.Type, bytes []
 		return 0, fmt.Errorf("Type %v is not supported yet.\n", Type.Kind())
 	}
 	return offset, nil
+}
+
+func decodeValueViaFunc(structName string, value reflect.Value, method reflect.Value, methodType reflect.Method, data []byte) (int, error) {
+	methodName := methodType.Name
+	if methodType.Type.NumIn() != 2 {
+		return 0, fmt.Errorf("Method %s.%s should receive 1 argument of type []byte", structName, methodName)
+	}
+	fmt.Println(methodType.Type.In(0))
+	if methodType.Type.In(0).Kind() != reflect.Ptr {
+		panic(123)
+		fmt.Printf("WARNING! Method %s doesn't have pounter receiver\n", methodName)
+	}
+	if methodType.Type.In(1) != reflect.TypeOf([]byte{}) {
+		return 0, fmt.Errorf("Method %s.%s should receive 1 argument of type []byte", structName, methodName)
+	}
+	if methodType.Type.NumOut() != 2 {
+		return 0, fmt.Errorf("Method %s.%s should return 2 values ([]byte and error)", structName, methodName)
+	}
+	if methodType.Type.Out(0).Kind() != reflect.Int {
+		return 0, fmt.Errorf("Method's %s.%s first return value should be int", structName, methodName)
+	}
+	if !methodType.Type.Out(1).Implements(errorInterface) {
+		return 0, fmt.Errorf("Method's %s.%s second return value should be error(current:%v)", structName, methodName, methodType.Type.Out(1))
+	}
+	values := method.Call([]reflect.Value{reflect.ValueOf(data)})
+	if err, _ := values[1].Interface().(error); err != nil {
+		return 0, err
+	}
+	result, _ := values[0].Interface().(int)
+	return result, nil
 }

@@ -53,6 +53,3 @@ It will be helpful if you use some API which accept/send structs with strict fie
     			   115 101 99 111 110 100 116 101 115 116] - secondtest
     			*/
     }
-
-## TODO: 
- - Custom encode/decode functions 

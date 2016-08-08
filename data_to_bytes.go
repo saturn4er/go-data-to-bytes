@@ -10,6 +10,7 @@ import (
 )
 
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
+
 // ConvertDataToBytes convert any data to byte array
 func ConvertDataToBytes(data interface{}, endian binary.ByteOrder) ([]byte, error) {
 	dataValue := reflect.ValueOf(data)

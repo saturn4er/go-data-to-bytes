@@ -22,9 +22,12 @@ type CustomFnStruct struct {
 func (t CustomFnStruct) EncodeIP() ([]byte, error) {
 	return []byte{192, 168, 0, 1}, nil
 }
-func (t CustomFnStruct) DecodeIP() {
 
+func (t CustomFnStruct) DecodeIP(data []byte) (int, error) {
+	t.Ip = "192.168.0.1"
+	return 4, nil
 }
+
 func TestIgnore(t *testing.T) {
 	data := TestStruct1{}
 	newData := TestStruct1{}
@@ -82,13 +85,23 @@ func TestCopyData(t *testing.T) {
 	}
 }
 func TestCustomFunction(t *testing.T) {
-	data := CustomFnStruct{Ip:"192.168.0.1"}
+	data := CustomFnStruct{Ip: "192.168.0.1"}
 	b, err := ConvertDataToBytes(&data, binary.LittleEndian)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	if !reflect.DeepEqual(b, []byte{192, 168, 0, 1}) {
+		t.Error("Bad custom function parsing")
+		return
+	}
+	data1 := CustomFnStruct{}
+	err = ConvertBytesToData(b, binary.LittleEndian, &data1)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if !reflect.DeepEqual(data1, data) {
 		t.Error("Bad custom function parsing")
 	}
 
