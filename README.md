@@ -4,13 +4,13 @@ It will be helpful if you use some API which accept/send structs with strict fie
 
 ## Installation
 
-    go get github.com/saturn4er/go-data-to-bytes
+    go get gopkg.in/saturn4er/go-data-to-bytes.v1
 
 ## Usage:
 
 ### Structure to bytes
 
-    import "github.com/saturn4er/go-convert-to-bytes"
+    import "gopkg.in/saturn4er/go-data-to-bytes.v1"
     type Test struct {
         A       string `bytes_length:"10"`
         B       string `bytes_length:"2"`
@@ -35,7 +35,7 @@ It will be helpful if you use some API which accept/send structs with strict fie
  
 ### Array to bytes
 
-    import "github.com/saturn4er/go-convert-to-bytes"
+    import "gopkg.in/saturn4er/go-data-to-bytes.v1"
     type Test struct {
     	A string `bytes_length:"10"`
     	B string `bytes_length:"10"`
