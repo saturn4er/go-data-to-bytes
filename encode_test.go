@@ -11,48 +11,53 @@ func TestEncode(t *testing.T) {
 	Convey("Test Encode", t, func() {
 		type CustomType [5][2]int16
 		type TestStruct1 struct {
-			FieldA string     `d2b:"length:2"` //31
-			FieldB string     `d2b:"length:2"` // 33
-			Slice  []int32    `d2b:"length:2"`
-			A      CustomType `d2b:"length:2"`
+			FieldA string  `d2b:"length:10"`
+			FieldB string  `d2b:"length:10"`
+			Slice  []int32 `d2b:"length:2"`
+			A      CustomType
 			QQ     *int32
-			B      int16  // 2
-			C      int32  // 4 6
-			D      int64  // 8 14
-			E      uint8  // 1 15
-			F      uint16 // 2 17
-			G      uint32 // 4 21
-			H      uint64 // 8 29
+			B      int16
+			C      int32
+			D      int64
+			E      uint8
+			F      uint16
+			G      uint32
+			H      uint64
 			EE     string `d2b:"-"`
 			I      int8
 			Q      *uint8
-			Z      [0]int32 `d2b:"length:1"`
 		}
 		Convey("Should return empty byte array if nil passed", func() {
-			var data *TestStruct1
+			type a **TestStruct1
+			var data a
 			bytes, err := Encode(data, binary.LittleEndian)
 			if err != nil {
 				t.Error(err)
 				return
 			}
 			So(err, ShouldBeNil)
-			So(bytes, ShouldHaveLength, 59)
+			So(bytes, ShouldHaveLength, 83)
+		})
+		Convey("Should return empty byte array if nil array passed", func() {
+			var data [5]int32
+			bytes, err := Encode(data, binary.LittleEndian)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			So(err, ShouldBeNil)
+			So(bytes, ShouldHaveLength, 20)
 		})
 		Convey("Should return valid byte array", func() {
 			data := &TestStruct1{
 				FieldA: "Hello",
 				FieldB: "World",
-				QQ: new(int32),
+				QQ:     new(int32),
+				Slice:  []int32{1},
 			}
 			bytes, err := Encode(data, binary.LittleEndian)
-			if err != nil {
-				t.Error(err)
-				return
-			}
 			So(err, ShouldBeNil)
-			So(bytes, ShouldHaveLength, 59)
-			So(string(bytes[:2]), ShouldEqual, "He")
-			So(string(bytes[2:4]), ShouldEqual, "Wo")
+			So(bytes, ShouldHaveLength, 83)
 		})
 		Convey("Should return error if struct tag length contains wrong value", func() {
 			type ErrTestStruct struct {
@@ -84,14 +89,6 @@ func TestEncode(t *testing.T) {
 				Field [2]int
 			}
 			bytes, err := Encode(&ErrTestStruct{Field: [2]int{10, 11}}, binary.LittleEndian)
-			So(err, ShouldNotBeNil)
-			So(bytes, ShouldBeEmpty)
-		})
-		Convey("Should return error if struct contains array field with type, that's not valid for marshalling 2", func() {
-			type ErrTestStruct struct {
-				Field [0]int `d2b:"length:4"` //31
-			}
-			bytes, err := Encode(&ErrTestStruct{}, binary.LittleEndian)
 			So(err, ShouldNotBeNil)
 			So(bytes, ShouldBeEmpty)
 		})
@@ -154,6 +151,39 @@ func TestEncode(t *testing.T) {
 			}
 			var d = new(ErrTestStruct)
 			bytes, err := Encode(d, binary.LittleEndian)
+			So(err, ShouldNotBeNil)
+			So(bytes, ShouldBeEmpty)
+		})
+		Convey("Should return error if array with bad elements encodes", func() {
+			var data *[5]int
+			bytes, err := Encode(data, binary.LittleEndian)
+			So(err, ShouldNotBeNil)
+			So(bytes, ShouldBeEmpty)
+		})
+		Convey("Should return error if struct slice with bad tag encodes", func() {
+			type ErrTestStruct struct {
+				Field int32 `d2b:"length:hello"`
+			}
+			var data *ErrTestStruct
+			bytes, err := Encode(data, binary.LittleEndian)
+			So(err, ShouldNotBeNil)
+			So(bytes, ShouldBeEmpty)
+		})
+		Convey("Should return error if nil struct with slice field without length encodes", func() {
+			type ErrTestStruct struct {
+				Field []int32
+			}
+			var data *ErrTestStruct
+			bytes, err := Encode(data, binary.LittleEndian)
+			So(err, ShouldNotBeNil)
+			So(bytes, ShouldBeEmpty)
+		})
+		Convey("Should return error if nil struct with slice field with bad element encodes", func() {
+			type ErrTestStruct struct {
+				Field []int `d2b:"length:5"`
+			}
+			var data *ErrTestStruct
+			bytes, err := Encode(data, binary.LittleEndian)
 			So(err, ShouldNotBeNil)
 			So(bytes, ShouldBeEmpty)
 		})

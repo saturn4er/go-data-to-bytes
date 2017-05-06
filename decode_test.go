@@ -83,6 +83,7 @@ func TestDecode(t *testing.T) {
 				A     *[]int32  `d2b:"length:2"`
 				B     *[]uint32 `d2b:"length:2"`
 				C     [2]int32
+				D     int    `d2b:"-"`
 				Test  string `d2b:"length:6"`
 				Test1 string `d2b:"length:4"`
 			}
@@ -124,6 +125,79 @@ func TestDecode(t *testing.T) {
 			err := Decode([]byte{1, 2, 3, 4}, binary.LittleEndian, result)
 			So(err, ShouldNotBeNil)
 			So(result, ShouldEqual, 0)
+		})
+		Convey("Should return error if trying to decode struct with bad field type", func() {
+			type Struct struct {
+				A int
+			}
+			var result = Struct{}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{})
+		})
+		Convey("Should return error if trying to decode struct with bad tags", func() {
+			type Struct struct {
+				A string `d2b:"length:hello"`
+			}
+			var result = Struct{}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{})
+		})
+		Convey("Should return error if trying to decode struct string field without length", func() {
+			type Struct struct{ A string }
+			var result = Struct{}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{})
+		})
+		Convey("Should return error if trying to decode struct slice field without length", func() {
+			type Struct struct{ A []int32 }
+			var result = Struct{}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{})
+		})
+		Convey("Should return error if trying to decode struct slice field with bad elements", func() {
+			type Struct struct {
+				A []int `d2b:"length:2"`
+			}
+			var result = Struct{}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{})
+		})
+		Convey("Should return error if trying to decode struct slice field with bad elements with already filled slice", func() {
+			type Struct struct {
+				A []int `d2b:"length:2"`
+			}
+			var result = Struct{A: []int{1, 2}}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{A: []int{1, 2}})
+		})
+		Convey("Should return error if trying to decode struct array field with bad elements", func() {
+			type Struct struct {
+				A [2]int
+			}
+			var result = Struct{}
+			err := Decode([]byte{
+				1, 2, 3, 4,
+			}, binary.LittleEndian, &result)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, Struct{})
 		})
 	})
 }

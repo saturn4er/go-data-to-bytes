@@ -70,6 +70,15 @@ func updateValueByTypeFromBytess(v reflect.Value, bytes []byte, endian binary.By
 		float := math.Float64frombits(val)
 		v.SetFloat(float)
 		return bytes[8:], nil
+	case reflect.Array:
+		var err error
+		for i := 0; i < v.Len(); i++ {
+			bytes, err = updateValueByTypeFromBytess(v.Index(i), bytes, endian)
+			if err != nil {
+				return []byte{}, err
+			}
+		}
+		return bytes, nil
 	case reflect.Struct:
 		tags, err := getStructTags(t)
 		if err != nil {
@@ -119,15 +128,6 @@ func updateStructField(v reflect.Value, bytes []byte, tags *structFieldTag, endi
 				return []byte{}, err
 			}
 			v.Set(reflect.Append(v, value.Elem()))
-		}
-		return bytes, nil
-	case reflect.Array:
-		var err error
-		for i := 0; i < v.Len(); i++ {
-			bytes, err = updateValueByTypeFromBytess(v.Index(i), bytes, endian)
-			if err != nil {
-				return []byte{}, err
-			}
 		}
 		return bytes, nil
 	case reflect.String:

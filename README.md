@@ -7,6 +7,11 @@ It will be helpful if you use some API which accept/send structs with strict fie
 
     go get gopkg.in/saturn4er/go-data-to-bytes.v2
 
+### Struct tags configuration
+
+ - dtb:"length:2" - Length of slice/array/string
+ - d2b:"-" - Skip this field while encoding/decoding
+
 ## Usage:
 
 ### Structure to bytes
@@ -28,13 +33,8 @@ func main(){
     fmt.Println(b) // [104 101 108 108 111 0 0 0 0 0 119 111] - Where first 10 bytes represent string "Hello", and last 2 bytes represent 2 characters of string "world"
 }
 ```
-#### Tag configuration
-
- - dtb:"length:2" - Specify length of slice/array/string
- - d2b:"-" - Skip this field while encoding/decoding
 
 ### Array to bytes example
-
 ```go
 import "gopkg.in/saturn4er/go-data-to-bytes.v2"
 type Test struct {

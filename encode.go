@@ -101,35 +101,21 @@ func structFieldValueToBytes(v reflect.Value, ft *structFieldTag, buffer *bytes.
 				return errors.Wrap(err, "can't convert slice element to bytes")
 			}
 		}
-		if l < ft.Length {
+		if handleLength < ft.Length {
 			typeLen, err := getTypeBytesLength(v.Type().Elem())
 			if err != nil {
 				return errors.Wrap(err, "can't calculate slice element type length")
 			}
-			placeholder := make([]byte, typeLen*ft.Length-l)
+			placeholder := make([]byte, typeLen*(ft.Length-handleLength))
 			buffer.Write(placeholder)
 		}
 
 	case reflect.Array:
-		var l = v.Len()
-		var handleLength = l
-		if ft.Length != 0 && ft.Length < l {
-			handleLength = ft.Length
-		}
-		for i := 0; i < handleLength; i++ {
+		for i := 0; i < v.Len(); i++ {
 			err := valueToBytes(v.Index(i), buffer, endian)
 			if err != nil {
 				return errors.Wrap(err, "can't convert array element to bytes")
 			}
-		}
-
-		if ft.Length != 0 && l < ft.Length {
-			typeLen, err := getTypeBytesLength(v.Type().Elem())
-			if err != nil {
-				return errors.Wrap(err, "can't calculate array element type length")
-			}
-			placeholder := make([]byte, typeLen*ft.Length-l)
-			buffer.Write(placeholder)
 		}
 	default:
 		return valueToBytes(v, buffer, endian)
@@ -155,6 +141,7 @@ func getTypeBytesLength(t reflect.Type) (int, error) {
 			if err != nil {
 				return 0, errors.Wrapf(err, "detecting %v.%v field length error", t.Name(), ft.Name)
 			}
+
 			result += fl
 		}
 		return result, nil
@@ -198,11 +185,7 @@ func getStructFieldTypeBytesLength(r reflect.Type, tagInfo *structFieldTag) (int
 		if err != nil {
 			return 0, errors.Wrap(err, "can't detect array element length")
 		}
-		l := r.Len()
-		if tagInfo.Length != 0 {
-			l = tagInfo.Length
-		}
-		return l * elemLength, nil
+		return r.Len() * elemLength, nil
 	case reflect.String:
 		if tagInfo.Length == 0 {
 			return 0, errors.New("need to specify length")
