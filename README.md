@@ -12,7 +12,7 @@ It will be helpful if you use some API which accept/send structs with strict fie
 
 ### Struct tags configuration
 
- - dtb:"length:2" - Length of slice/array/string
+ - d2b:"length:2" - Length of slice/array/string
  - d2b:"-" - Skip this field while encoding/decoding
 
 ## Usage:
