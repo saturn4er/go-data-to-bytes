@@ -1,19 +1,20 @@
-#go-convert-to-bytes
+# go-convert-to-bytes
+
 This library will help you to convert your data to bytes array and vice versa using some features.
 It will be helpful if you use some API which accept/send structs with strict fields length
 
 ## Installation
 
-    go get gopkg.in/saturn4er/go-data-to-bytes.v1
+    go get gopkg.in/saturn4er/go-data-to-bytes.v2
 
 ## Usage:
 
 ### Structure to bytes
-
-    import "gopkg.in/saturn4er/go-data-to-bytes.v1"
+```go
+    import "gopkg.in/saturn4er/go-data-to-bytes.v2"
     type Test struct {
-        A       string `bytes_length:"10"`
-        B       string `bytes_length:"2"`
+        A       string `d2b:"length:10"`
+        B       string `d2b:"length:2"`
     }
     func main(){
         usefulData := Test{
@@ -26,19 +27,17 @@ It will be helpful if you use some API which accept/send structs with strict fie
         }
         fmt.Println(b) // [104 101 108 108 111 0 0 0 0 0 119 111] - Where first 10 bytes represent string "Hello", and last 2 bytes represent 2 characters of string "world"
     }
-    
-#### Available tags
-    
- - bytes_length:"N"                    - length of string in bytes
- - bytes_ignore:"true"              - ignore this field during conversion
- - bytes_fn:"encode_fn,decode_fn"   - custom functions to encode/decode data
- 
-### Array to bytes
+```
+#### Tag configuration
 
-    import "gopkg.in/saturn4er/go-data-to-bytes.v1"
+ - dtb:"length:2" - Specify length of slice/array/string
+ - d2b:"-" - Skip this field while encoding/decoding
+
+### Array to bytes example
+    import "gopkg.in/saturn4er/go-data-to-bytes.v2"
     type Test struct {
-    	A string `bytes_length:"10"`
-    	B string `bytes_length:"10"`
+    	A string `d2b:"length:10"`
+    	B string `d2b:"length:10"`
     }
     
     func main() {
