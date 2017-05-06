@@ -90,6 +90,9 @@ func updateValueByTypeFromBytess(v reflect.Value, bytes []byte, endian binary.By
 }
 
 func updateStructField(v reflect.Value, bytes []byte, tags *structFieldTag, endian binary.ByteOrder) ([]byte, error) {
+	if tags.Skip {
+		return bytes, nil
+	}
 	t := v.Type()
 	switch t.Kind() {
 	case reflect.Ptr:
