@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/saturn4er/go-data-to-bytes.svg?branch=master)](https://travis-ci.org/saturn4er/go-data-to-bytes)
 [![Coverage Status](https://coveralls.io/repos/github/saturn4er/go-data-to-bytes/badge.svg)](https://coveralls.io/github/saturn4er/go-data-to-bytes)
 
-# go-convert-to-bytes
+# go-data-to-bytes
 
 This library will help you to convert your data to bytes array and vice versa using some features.
 It will be helpful if you use some API which accept/send structs with strict fields length
